@@ -1,0 +1,44 @@
+module Families2Persons;
+-- @path Families=/Families2Persons/Metamodels/Families.ecore
+-- @path Persons=/Families2Persons/Metamodels/Persons.ecore
+create OUT: Persons from IN: Families;
+helper context Families!Member def: isFemale(): Boolean =
+	if not self.FamilyMother.oclIsUndefined() then
+		true
+	else
+		if not self.FamilyDaughter.oclIsUndefined() then
+			true
+		else
+			false
+		endif
+	endif;
+helper context Families!Member def: familyName: String =
+	if not self.FamilyFather.oclIsUndefined() then
+		self.FamilyFather.lastName
+	else
+		if not self.FamilyMother.oclIsUndefined() then
+			self.FamilyMother.lastName
+		else
+			if not self.FamilySon.oclIsUndefined() then
+				self.FamilySon.lastName
+			else
+				self.FamilyDaughter.lastName
+			endif
+		endif
+	endif;
+rule Member2Male {
+	from
+		s: Families!Member (not s.isFemale())
+	to
+		t: Persons!Male (
+			fullName <- s.firstName + ' ' + s.familyName
+		)
+}
+rule Member2Female {
+	from
+		s: Families!Member (s.isFemale())
+	to
+		t: Persons!Female (
+			fullName <- s.firstName + ' ' + s.familyName
+		)
+}
